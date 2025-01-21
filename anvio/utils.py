@@ -979,6 +979,7 @@ def split_fasta(input_file_path, parts=1, file_name_prefix=None, shuffle=False, 
             output_fasta.close()
     else:
         for part_no in range(parts):
+            
             output_file = GET_OUTPUT_FILE_PATH(part_no)
 
             output_fasta = u.FastaOutput(output_file)

@@ -271,7 +271,7 @@ class SingleGenomeCodonUsage(object):
                 gene_codon_frequency_df[codon] = 0
 
         # Drop any column named NaN for unknown codons.
-        gene_codon_frequency_df = gene_codon_frequency_df[constants.codon_to_AA]
+        gene_codon_frequency_df = gene_codon_frequency_df[list(constants.codon_to_AA)]
 
         gene_codon_frequency_df = gene_codon_frequency_df.fillna(0)
         gene_codon_frequency_df = gene_codon_frequency_df[sorted(gene_codon_frequency_df.columns)]
@@ -2025,11 +2025,11 @@ class SingleGenomeCodonUsage(object):
             removed_amino_acids = []
             removed_codons = []
             for amino_acid, codons in self.synonymous_nonstop_amino_acid_codons_dict.items():
-                present_codons = set(reference_codon_frequency_df.columns.intersection(codons))
+                present_codons = list(reference_codon_frequency_df.columns.intersection(codons))
                 if (reference_codon_frequency_df[present_codons].sum().sum()
                     < reference_exclude_amino_acid_count):
                     removed_amino_acids.append(amino_acid)
-                    removed_codons += list(present_codons)
+                    removed_codons += present_codons
             reference_codon_frequency_df = reference_codon_frequency_df.drop(removed_codons, axis=1)
             if removed_amino_acids:
                 self.run.warning(

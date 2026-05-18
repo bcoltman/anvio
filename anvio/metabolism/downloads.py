@@ -455,10 +455,10 @@ class KOfamDownload(KeggSetup):
                               f"function: {tuple_of_seqs}. No alignment, no HMM. Sorry!")
 
         m = Muscle(progress=progress_quiet, run=run_quiet)
-        clw_alignment = m.run_stdin(tuple_of_seqs, debug=anvio.DEBUG, clustalw_format=True)
+        fasta_alignment = m.run_fasta(tuple_of_seqs, debug=anvio.DEBUG)
 
-        hmmbuild_cmd_line = ['hmmbuild', '-n', hmm_name, '--informat', 'clustallike', hmm_output_file, '-'] # sending '-' in place of an alignment file so it reads from stdin
-        utils.run_command_STDIN(hmmbuild_cmd_line, log_file_path, clw_alignment)
+        hmmbuild_cmd_line = ['hmmbuild', '-n', hmm_name, '--amino', '--informat', 'afa', hmm_output_file, '-'] # sending '-' in place of an alignment file so it reads from stdin
+        utils.run_command_STDIN(hmmbuild_cmd_line, log_file_path, fasta_alignment)
 
         if not os.path.exists(hmm_output_file):
             raise ConfigError(f"It seems that the `hmmbuild` command failed because there is no output model at {hmm_output_file}. "

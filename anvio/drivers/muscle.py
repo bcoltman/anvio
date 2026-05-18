@@ -1,7 +1,9 @@
 """Interface to muscle."""
 
 import os
+import re
 import shutil
+import subprocess
 
 import anvio
 import anvio.fastalib as f
@@ -34,6 +36,7 @@ class Muscle:
         self.program_name = program_name
 
         utils.is_program_exists(self.program_name)
+        self.major_version = self.get_major_version()
 
         self.citation = "Edgar, doi:10.1093/nar/gkh340"
         self.web = "http://www.drive5.com/muscle"
@@ -56,9 +59,15 @@ class Muscle:
             controls whether or not the temporary directory is removed after execution. Probably a good
             idea to set this to anvio.DEBUG
         clustalw_format : Boolean
-            if True, will return alignment in CLUSTALW format (obtained using Muscle's -clw flag) rather than
+            if True, will return alignment in CLUSTALW format (obtained using Muscle 3's -clw flag) rather than
             a dict of FASTA alignments
         """
+        if self.major_version >= 5:
+            if clustalw_format:
+                raise ConfigError("Drivers::Muscle: MUSCLE 5 does not support the legacy `-clw` output flag. "
+                                  "Use FASTA output instead.")
+
+            return self.run_default(sequences_list, debug=debug)
 
         tmp_dir = filesnpaths.get_temp_directory_path()
         log_file_path = os.path.join(tmp_dir, '00_log.txt')
@@ -119,6 +128,39 @@ class Muscle:
 
         """
 
+        alignment_file_path, tmp_dir = self.run_fasta_file(sequences_list)
+
+        alignments = {}
+
+        # parse the output, and fill alignments
+        output = f.SequenceSource(alignment_file_path)
+
+        while next(output):
+            alignments[output.id] = output.seq
+
+        if not debug:
+            shutil.rmtree(tmp_dir)
+
+        return alignments
+
+
+    def run_fasta(self, sequences_list, debug=False):
+        """Takes a list of tuples for sequences, performs MSA using muscle, returns aligned FASTA text."""
+
+        alignment_file_path, tmp_dir = self.run_fasta_file(sequences_list)
+
+        with open(alignment_file_path) as alignment_file:
+            alignment = alignment_file.read()
+
+        if not debug:
+            shutil.rmtree(tmp_dir)
+
+        return alignment
+
+
+    def run_fasta_file(self, sequences_list):
+        """Takes a list of tuples for sequences, performs MSA using muscle, returns an aligned FASTA file path."""
+
         tmp_dir = filesnpaths.get_temp_directory_path()
         log_file_path = os.path.join(tmp_dir, '00_log.txt')
         input_file_path = os.path.join(tmp_dir, 'input.fa')
@@ -134,11 +176,7 @@ class Muscle:
         with open(input_file_path, 'w') as input_file:
             input_file.write(sequences_data)
 
-        cmd_line = [self.program_name, '-in', input_file_path, '-out', output_file_path]
-
-        additional_params = self.get_additional_params_from_shell()
-        if additional_params:
-            cmd_line += additional_params
+        cmd_line = self.get_file_alignment_cmd_line(input_file_path, output_file_path)
 
         output = utils.run_command(cmd_line, log_file_path)
 
@@ -147,18 +185,39 @@ class Muscle:
             raise ConfigError("Drivers::Muscle: Something went wrong with this alignment that was working on %d "
                               "sequences :/ You can find the output in this log file: %s" % (len(sequences_list), log_file_path))
 
-        alignments = {}
+        return output_file_path, tmp_dir
 
-        # parse the output, and fill alignments
-        output = f.SequenceSource(output_file_path)
 
-        while next(output):
-            alignments[output.id] = output.seq
+    def get_file_alignment_cmd_line(self, input_file_path, output_file_path):
+        if self.major_version >= 5:
+            cmd_line = [self.program_name, '-align', input_file_path, '-output', output_file_path]
+        else:
+            cmd_line = [self.program_name, '-in', input_file_path, '-out', output_file_path]
 
-        if not debug:
-            shutil.rmtree(tmp_dir)
+        additional_params = self.get_additional_params_from_shell()
+        if additional_params:
+            cmd_line += additional_params
 
-        return alignments
+        return cmd_line
+
+
+    def get_major_version(self):
+        try:
+            version_process = subprocess.run([self.program_name, '-version'],
+                                             check=False,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT,
+                                             text=True)
+        except OSError as e:
+            raise ConfigError("Drivers::Muscle: failed to determine the MUSCLE version for '%s': %s" % (self.program_name, e))
+
+        version_info = version_process.stdout
+        match = re.search(r'(?:muscle\s+v?|v)(\d+)', version_info, flags=re.IGNORECASE)
+
+        if not match:
+            raise ConfigError("Drivers::Muscle: failed to parse the MUSCLE version from this output: %s" % version_info)
+
+        return int(match.group(1))
 
 
     def get_additional_params_from_shell(self):

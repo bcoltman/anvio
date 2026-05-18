@@ -4,12 +4,13 @@ channels:
 - bioconda
 - defaults
 dependencies:
-- python=3.10
-- sqlite=3.46
+- python=3.14
+- pip
+- sqlite>=3.46
 - prodigal
 - idba
 - mcl
-- muscle=3.8.1551
+- muscle>=5
 - famsa
 - hmmer
 - diamond
@@ -33,4 +34,7 @@ dependencies:
 - bioconductor-qvalue
 - "meme>=5.5"
 - fastani
-- nodejs=20.12.2
+- ghostscript
+- nodejs>=22,<23
+- llvmlite
+- numba

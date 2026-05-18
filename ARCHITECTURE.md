@@ -239,7 +239,7 @@ grep 'GenomeDescriptions(' * -nr --exclude-dir data
 
 ### `multiprocess` instead of `multiprocessing`
 
-The codebase uses `import multiprocess as multiprocessing` (a fork using `dill` serializer) because Python 3.10 cannot pickle local lambdas with stdlib `multiprocessing`.
+The codebase uses `import multiprocess as multiprocessing` (a fork using `dill` serializer). This remains intentional under Python 3.14: stdlib `pickle` serializes functions by module-qualified name rather than serializing bytecode plus closure state, so local functions, lambdas, and closure-heavy worker targets are not compatible with a direct stdlib `multiprocessing` swap.
 
 ### Table Schemas
 
@@ -734,17 +734,17 @@ Stale docs that no longer match the code are actively harmful because they are w
 
 These may change over time:
 
-- `numpy==1.24.1` — pinned; many array operations throughout
-- `pandas==1.4.4` — pinned; used for tabular data
-- `scikit-learn==1.2.2` — pinned; clustering, ordination
-- `matplotlib==3.5.1` — pinned; static figure generation
+- `numpy>=2.3.3` — many array operations throughout
+- `pandas>=2.3.3` — used for tabular data
+- `scikit-learn>=1.8.0` — clustering, ordination
+- `matplotlib>=3.10.8` — static figure generation
 - `bottle` — lightweight web framework for the interactive interface
 - `snakemake` — workflow engine
 - `pysam` — BAM file reading
 - `pyrodigal_gv` — gene calling (default caller, replaces prodigal)
-- `multiprocess` — fork of multiprocessing using dill
+- `multiprocess>=0.70.19` — fork of multiprocessing using dill
 - `colored` — terminal color codes (`Fore`, `Back`, `Style` in terminal.py)
 - `networkx==3.1` — graph operations (reaction networks, programs network)
 - `ete3` — phylogenetic tree handling
 
-Python requirement is strict: `==3.10.*` (checked at import, enforced in `pyproject.toml`).
+Python requirement is strict: `==3.14.*` (checked at import, enforced in `pyproject.toml`).

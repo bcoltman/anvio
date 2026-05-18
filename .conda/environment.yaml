@@ -20,6 +20,7 @@ dependencies:
 - bowtie2
 - bwa
 - graphviz
+- immutables
 - "samtools>=1.9"
 - trimal
 - iqtree

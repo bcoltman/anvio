@@ -111,7 +111,7 @@ def calculate_pN_pS_ratio(args):
         add_potentials=True
     )
 
-    potentials = var.data.groupby('corresponding_gene_call')[f'nS_gene_{args.comparison}', f'nN_gene_{args.comparison}'].first()
+    potentials = var.data.groupby('corresponding_gene_call')[[f'nS_gene_{args.comparison}', f'nN_gene_{args.comparison}']].first()
 
     groupby_vars = args.groupby.split(',')
 

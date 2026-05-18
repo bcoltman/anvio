@@ -51,6 +51,7 @@ dependencies = [
     "bottle",
     "pysam",
     "ete3",
+    "legacy-cgi>=2.6",
     "scikit-learn>=1.8.0",
     "django",
     "requests",

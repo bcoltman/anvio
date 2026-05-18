@@ -1696,6 +1696,8 @@ def get_list_of_outliers(values, threshold=None, zeros_are_outliers=False, media
     if threshold is None:
         threshold = 1.5
 
+    values = np.asarray(values)
+
     if len(values.shape) == 1:
         values = values[:, None]
 

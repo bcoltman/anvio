@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-"""A script to export run ANI on every contig in a FASTA file."""
+"""A script to run fastANI on every contig in a FASTA file."""
 
 import os
 import sys
 import shutil
+from argparse import Namespace
 from anvio.argparse import ArgumentParser
 
 import anvio
@@ -13,7 +14,7 @@ import anvio.terminal as terminal
 import anvio.clustering as clustering
 import anvio.filesnpaths as filesnpaths
 
-from anvio.drivers import pyani
+from anvio.drivers import fastani
 
 from anvio.errors import ConfigError, FilesNPathsError
 
@@ -25,7 +26,7 @@ __version__ = anvio.__version__
 __authors__ = ['meren']
 __requires__ = ['fasta']
 __provides__ = ['genome-similarity']
-__description__ = "Run ANI between contigs in a single FASTA file"
+__description__ = "Run fastANI between contigs in a single FASTA file"
 
 
 def main():
@@ -41,9 +42,11 @@ def main():
 
 def run_program():
     args = get_args()
+    if isinstance(args, dict):
+        args = Namespace(**args)
     run = terminal.Run()
 
-    program = pyani.PyANI(args)
+    program = fastani.ManyToMany(args=args)
 
     filesnpaths.is_file_fasta_formatted(args.fasta_file)
     filesnpaths.check_output_directory(args.output_dir, ok_if_exists=False)
@@ -66,11 +69,24 @@ def run_program():
     run.info("Temporary output directory", temp_dir)
     run.info("Output directory", os.path.abspath(args.output_dir))
 
+    name_to_temp_path = {}
     while next(fasta):
-        with open(os.path.join(temp_dir, fasta.id + '.fa'), 'w') as f:
+        temp_fasta_path = os.path.join(temp_dir, fasta.id + '.fa')
+        name_to_temp_path[fasta.id] = temp_fasta_path
+        with open(temp_fasta_path, 'w') as f:
             f.write('>%s\n%s\n' % (fasta.id, fasta.seq))
 
-    results = program.run_command(temp_dir)
+    fastani_input_file = os.path.join(temp_dir, 'fasta_paths.txt')
+    with open(fastani_input_file, 'w') as f:
+        f.write('\n'.join(name_to_temp_path.values()) + '\n')
+
+    results = program.run_command(
+        query_targets=fastani_input_file,
+        reference_targets=fastani_input_file,
+        output_path=os.path.join(temp_dir, 'fastANI_output.txt'),
+        run_dir=temp_dir,
+        name_conversion_dict={v: k for k, v in name_to_temp_path.items()}
+    )
 
     clusterings = {}
     for report_name in results:
@@ -79,7 +95,7 @@ def run_program():
 
     os.mkdir(args.output_dir)
     for report_name in results:
-        output_path_for_report = os.path.join(args.output_dir, args.method + '_' + report_name)
+        output_path_for_report = os.path.join(args.output_dir, 'fastANI_' + report_name)
 
         utils.store_dict_as_TAB_delimited_file(results[report_name], output_path_for_report + '.txt')
         with open(output_path_for_report + '.newick', 'w') as f:
@@ -102,13 +118,10 @@ def get_args():
     parser.add_argument(*anvio.A('pan-db'), **anvio.K('pan-db', {'required': False}))
     parser.add_argument(*anvio.A('num-threads'), **anvio.K('num-threads'))
     parser.add_argument(*anvio.A('log-file'), **anvio.K('log-file'))
-    parser.add_argument('--method', default='ANIb', type=str, help="Method for pyANI. The default is %(default)s.\
-                         You must have the necessary binary in path for whichever method you choose. According to\
-                         the pyANI help for v0.2.7 at https://github.com/widdowquinn/pyani, the method 'ANIm' uses\
-                         MUMmer (NUCmer) to align the input sequences. 'ANIb' uses BLASTN+ to align 1020nt fragments\
-                         of the input sequences. 'ANIblastall': uses the legacy BLASTN to align 1020nt fragments\
-                         Finally, 'TETRA': calculates tetranucleotide frequencies of each input sequence",
-                         choices=['ANIm', 'ANIb', 'ANIblastall', 'TETRA'])
+    parser.add_argument('--fastani-kmer-size', type=int, default=16, help="Choose a kmer. The default is %(default)s.")
+    parser.add_argument('--fragment-length', type=int, default=3000, help="Choose a fragment length. The default is %(default)s.")
+    parser.add_argument('--min-fraction', type=float, default=0.25, help="Minimum fraction of alignment to be shared between sequence pairs \
+                                                                        to calculate ANI. The default is %(default)s.")
     parser.add_argument(*anvio.A('distance'), **anvio.K('distance', {'help': 'The distance metric for the hierarchical \
                          clustering. The default is "%(default)s".'}))
     parser.add_argument(*anvio.A('linkage'), **anvio.K('linkage', {'help': 'The linkage method for the hierarchical \

@@ -69,33 +69,17 @@ def get_args():
 
     group_PROGRAM = parser.add_argument_group('Program', "Tell anvi'o which similarity program to run.")
     group_PROGRAM.add_argument('--program', type=str, help="Tell anvi'o which program to run to process genome similarity.\
-                        For ANI, you should either use pyANI or fastANI. If accuracy is paramount (for example, distinguishing things less\
-                        than 1 percent different), or for dealing with genomes < 80 percent similar,\
-                        pyANI is what we recommend. However, fastANI is much faster. If you for some reason want to use mash\
-                        similarity, you can use sourmash, but its really not intended for genome comparisons. If you don't choose\
-                        anything here, anvi'o will reluctantly set the program to pyANI, but you really should be the one who\
-                        is on top of these things.",
-                        choices=['pyANI','fastANI','sourmash'], default='pyANI')
+                        For ANI, anvi'o uses fastANI. If you for some reason want to use mash similarity, you can use sourmash,\
+                        but its really not intended for genome comparisons.",
+                        choices=['fastANI','sourmash'], default='fastANI')
 
     group_FASTANI = parser.add_argument_group('fastANI Settings', "Tell anvi'o to tell fastANI what settings to set.\
                                                                    Only if `--program` is set to `fastANI`")
     group_FASTANI.add_argument('--fastani-kmer-size', type=int, default=16, help="Choose a kmer. The default is %(default)s.")
     group_FASTANI.add_argument('--fragment-length', type=int, default=3000, help="Choose a fragment length. The default is %(default)s.")
-    group_FASTANI.add_argument('--min-num-fragments', type=int, default=50, help="Choose the minimum number of fragment lengths that can\
-                                                                                be trusted. The default is %(default)s.")
-
-    group_PYANI = parser.add_argument_group('pyANI Settings', "Tell anvi'o to tell pyANI what method you wish to use\
-                                             and what settings to set. Only if `--program` is set to `pyANI`")
-    group_PYANI.add_argument('--method', default='ANIb', type=str, help="Method for pyANI. The default is %(default)s.\
-                         You must have the necessary binary in path for whichever method you choose. According to\
-                         the pyANI help for v0.2.7 at https://github.com/widdowquinn/pyani, the method 'ANIm' uses\
-                         MUMmer (NUCmer) to align the input sequences. 'ANIb' uses BLASTN+ to align 1020nt fragments\
-                         of the input sequences. 'ANIblastall': uses the legacy BLASTN to align 1020nt fragments\
-                         Finally, 'TETRA': calculates tetranucleotide frequencies of each input sequence",
-                         choices=['ANIm', 'ANIb', 'ANIblastall', 'TETRA'])
-    group_PYANI.add_argument(*anvio.A('min-alignment-fraction'), **anvio.K('min-alignment-fraction'))
-    group_PYANI.add_argument(*anvio.A('significant-alignment-length'), **anvio.K('significant-alignment-length'))
-    group_PYANI.add_argument(*anvio.A('min-full-percent-identity'), **anvio.K('min-full-percent-identity', {'default': 0.0}))
+    group_FASTANI.add_argument('--min-fraction', type=float, default=0.25, help="Minimum fraction of alignment to be shared between genome pairs \
+                                                                                to calculate ANI. If reference and query genome size differ, \
+                                                                                the smaller one among the two is considered. The default is %(default)s.")
 
     group_SOURMASH = parser.add_argument_group('Sourmash Settings', "Tell anvi'o to tell sourmash what settings to set.\
                                                 Only if `--program` is set to `sourmash`")

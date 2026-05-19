@@ -38,7 +38,8 @@ class FastANIDriver:
         A = lambda x: args.__dict__[x] if x in args.__dict__ else None
         self.kmer_size = A('fastani_kmer_size') or 16
         self.fragment_length = A('fragment_length') or 3000
-        self.min_fraction = A('min_fraction') or 0.25
+        self.min_fraction = A('min_fraction')
+        self.min_fraction = self.min_fraction if self.min_fraction is not None else 0.25
         self.num_threads = A('num_threads') or 1
         self.log_file_path = os.path.abspath(A('log_file') or filesnpaths.get_temp_file_path())
         self.quiet = A('quiet')

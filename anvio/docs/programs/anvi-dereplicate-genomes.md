@@ -6,9 +6,9 @@ This program uses the user's similarity metric of choice to identify genomes tha
 
 You have two options for the input to this program:
 
-- the results of %(anvi-compute-genome-similarity)s (a %(genome-similarity)s directory). If you used `fastANI` or `pyANI` when you ran %(anvi-compute-genome-similarity)s, provide this using the parameter `--ani-dir`; if you used sourmash, use the parameter `--mash-dir`.
+- the results of %(anvi-compute-genome-similarity)s (a %(genome-similarity)s directory). If you used `fastANI` when you ran %(anvi-compute-genome-similarity)s, provide this using the parameter `--ani-dir`; if you used sourmash, use the parameter `--mash-dir`.
 
-- an %(internal-genomes)s, %(external-genomes)s or a series of %(fasta)s files (each of which represents a genome), in which case anvi'o will run %(anvi-compute-genome-similarity)s for you.  When providing these inputs, you can also provide any of the parameters that %(anvi-compute-genome-similarity)s can take, including the `--program` you want to use (out of  [PyANI](https://github.com/widdowquinn/pyani), [fastANI](https://github.com/ParBLiSS/FastANI),  [sourmash](https://sourmash.readthedocs.io/en/latest/)) and their parameters. Details about all of this can be found in the help menu for %(anvi-compute-genome-similarity)s.
+- an %(internal-genomes)s, %(external-genomes)s or a series of %(fasta)s files (each of which represents a genome), in which case anvi'o will run %(anvi-compute-genome-similarity)s for you.  When providing these inputs, you can also provide any of the parameters that %(anvi-compute-genome-similarity)s can take, including the `--program` you want to use (out of [fastANI](https://github.com/ParBLiSS/FastANI) or [sourmash](https://sourmash.readthedocs.io/en/latest/)) and their parameters. Details about all of this can be found in the help menu for %(anvi-compute-genome-similarity)s.
 
 #### Output Format
 
@@ -38,12 +38,12 @@ You can also choose to report all genome fasta files (including redundant genome
 
 You are required to set the threshold for two genomes to be considered redundant and put in the same cluster.
 
-For example, if you had the results from an %(anvi-compute-genome-similarity)s run where you had used `pyANI` and wanted the threshold to be 90 percent, you would run:
+For example, if you had the results from an %(anvi-compute-genome-similarity)s run where you had used `fastANI` and wanted the threshold to be 90 percent, you would run:
 
 {{ codestart }}
 anvi-dereplicate-genomes --ani-dir %(genome-similarity)s \
                          -o path/to/output \
-                         --program pyANI \
+                         --program fastANI \
                          --similiarity-threshold 0.90
 {{ codestop }}
 

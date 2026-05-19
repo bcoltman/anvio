@@ -2,8 +2,7 @@
 This program uses the user's similarity metric of choice to calculate the similarity between the input genomes.
 
 The currently available programs for calculating similarity metrics include, chosen can be chosen with `--program`:
-- [PyANI](https://github.com/widdowquinn/pyani)) to calculate the average nucleotide identity (ANI) (i.e. what portion of orthologous gene pairs align)
-- [fastANI](https://github.com/ParBLiSS/FastANI) also to calcualte the ANI but at a faster speed (at the drawback of a slight reduction in accuracy)
+- [fastANI](https://github.com/ParBLiSS/FastANI) to calculate average nucleotide identity (ANI)
 - [sourmash](https://sourmash.readthedocs.io/en/latest/) to calculate the mash distance between genomes.  Though we provide this option, we don't recommend using sourmash for genome comparisons--it excels at other tasks--yet it remains as a legacy option.
 
 ### Input/Output
@@ -16,36 +15,17 @@ The program outputs a directory with %(genome-similarity)s data. The specific co
 
 You also have the option to provide a %(pan-db)s, in which case the output data will additionally be stored in the database as %(misc-data-layers)s and %(misc-data-layer-orders)s data. This was done in the [pangenomic tutorial](http://merenlab.org/2016/11/08/pangenomics-v2/#computing-the-average-nucleotide-identity-for-genomes-and-other-genome-similarity-metrics-too).
 
-Here is an example run with pyANI from an %(external-genomes)s without any parameter changes:
+Here is an example run with fastANI from an %(external-genomes)s without any parameter changes:
 
 {{ codestart }}
 anvi-compute-genome-similarity -e %(external-genomes)s \
                                -o path/for/%(genome-similarity)s \
-                               --program pyANI
+                               --program fastANI
 {{ codestop }}
 
 ### Genome similarity metrics: parameters
 
 Parameters have been divided up based on which `--program` you use.
-
-#### pyANI
-
-You have the option to change any of the follow parameters:
-
-- The method used for alignment. The options are:
-    - `ANIb` (default): uses [BLASTN](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome)+ to align 1020 nt fragments of the inputs
-    - `ANIm`: uses [MUMmer](http://mummer.sourceforge.net/) to align
-    - `ANIblastall`: Uses legacy [BLASTN](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome) to align 1020 nt fragments
-    - `TETRA`: Alignment free. This calculates similarity scores by comparing tetranucleotide frequencies for each input
-
-- The minimum alignment fraction (all percent identity scores lower than this will be set to 0). The default is 0.
-
-
-- If you want to keep alignments that are long, despite them not passing the minimum alignment fraction filter, you can supply a `--significant-alignment-length` to override `--min-alignment-fraction`.
-
-
-- Similarly, you can discard all results less than some full percent identity (percent identity of aligned segments * aligned fraction).
-
 
 #### fastANI
 
@@ -53,9 +33,9 @@ You can change any of the following fastANI parameters:
 
 * The kmer size. The default is 16.
 
-* The fragment length. The default is 30.
+* The fragment length. The default is 3000.
 
-* The minimum number of fragments for a result to count. The default is 50.
+* The minimum alignment fraction for fastANI to report a result. The default is 0.25.
 
 #### sourmash
 

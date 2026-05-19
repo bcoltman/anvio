@@ -227,22 +227,23 @@ class MetagenomeCentricGeneClassifier:
             if num_samples > 100 and counter % 100 == 0:
                 self.progress.update('%d of %d samples...' % (counter, num_samples))
             # get the non-outlier information
-            non_outlier_indices, self.samples_coverage_stats_dicts.loc[sample,] = get_non_outliers_information(self.coverage_values_per_nt[sample], MAD_threshold=self.outliers_threshold, zeros_are_outliers=self.zeros_are_outliers)
+            non_outlier_indices, sample_coverage_stats = get_non_outliers_information(self.coverage_values_per_nt[sample], MAD_threshold=self.outliers_threshold, zeros_are_outliers=self.zeros_are_outliers)
+            self.samples_coverage_stats_dicts.loc[sample, columns_for_samples_coverage_stats_dict] = sample_coverage_stats
             self.non_outlier_indices[sample] = non_outlier_indices
             number_of_non_outliers = len(self.non_outlier_indices[sample])
             if anvio.DEBUG:
-                self.run.info_single('The mean and std of non-outliers in sample %s are: %s, %s respectively' % (sample, self.samples_coverage_stats_dicts['non_outlier_mean_coverage'][sample], self.samples_coverage_stats_dicts['non_outlier_coverage_std'][sample]))
+                self.run.info_single('The mean and std of non-outliers in sample %s are: %s, %s respectively' % (sample, self.samples_coverage_stats_dicts.loc[sample, 'non_outlier_mean_coverage'], self.samples_coverage_stats_dicts.loc[sample, 'non_outlier_coverage_std']))
                 self.run.info_single('The number of non-outliers is %s of %s (%.2f%%)' % (number_of_non_outliers, total_length, 100.0 * number_of_non_outliers / total_length))
             detection[sample] = np.count_nonzero(self.coverage_values_per_nt[sample]) / total_length
-            samples_information['presence'][sample] = get_presence_absence_information(number_of_non_outliers/total_length, self.alpha)
+            samples_information.loc[sample, 'presence'] = get_presence_absence_information(number_of_non_outliers/total_length, self.alpha)
             if detection[sample] <= 0.5:
-                samples_information['presence'][sample] = False
-            if samples_information['presence'][sample]:
+                samples_information.loc[sample, 'presence'] = False
+            if samples_information.loc[sample, 'presence']:
                 positive_samples.append(sample)
-            elif samples_information['presence'][sample] == False:
+            elif samples_information.loc[sample, 'presence'] == False:
                 negative_samples.append(sample)
 
-            samples_information['detection'][sample] = detection[sample]
+            samples_information.loc[sample, 'detection'] = detection[sample]
             counter += 1
 
         self.positive_samples = positive_samples
@@ -371,7 +372,8 @@ class MetagenomeCentricGeneClassifier:
                 self.progress.update('%d of %d genes...' % (counter, num_genes))
 
             # samples in which the gene is present
-            _samples = self.gene_presence_absence_in_samples.loc[gene_id,self.gene_presence_absence_in_samples.loc[gene_id,]==True].index
+            gene_presence_absence = self.gene_presence_absence_in_samples.loc[gene_id]
+            _samples = gene_presence_absence[gene_presence_absence == True].index
             # mean and std of non-outlier nt in each sample
             x = list(self.samples_coverage_stats_dicts.loc[_samples,'non_outlier_mean_coverage'].values)
             if "non_outlier_coverage_std" in self.samples_coverage_stats_dicts:

@@ -3,8 +3,6 @@
 import os
 import sys
 import json
-import copy
-import snakemake
 
 import anvio
 import anvio.utils as u
@@ -14,6 +12,7 @@ import anvio.filesnpaths as filesnpaths
 
 from anvio.errors import ConfigError
 from anvio.version import versions_for_db_types
+from snakemake.cli import main as snakemake_main
 
 
 __copyright__ = "Copyleft 2015-2024, The Anvi'o Project (http://anvio.org/)"
@@ -30,6 +29,12 @@ progress = terminal.Progress()
 r = errors.remove_spaces
 
 workflow_config_version = versions_for_db_types['config']
+
+
+def get_entry_snakefile_path(workflow):
+    """Return the entry Snakefile path from Snakemake 9's included-file iterator."""
+    return str(next(iter(workflow.included)).abspath())
+
 
 class WorkflowSuperClass:
     def __init__(self):
@@ -270,41 +275,31 @@ class WorkflowSuperClass:
         if self.dry_run_only:
             return
 
-        # snakemake.main() accepts an `argv` parameter, but then the code has mixed responses to
-        # that, and at places continues to read from sys.argv in a hardcoded manner. so we have to
-        # overwrite our argv here.
-        original_sys_argv = copy.deepcopy(sys.argv)
-
-        sys.argv = ['snakemake',
-                    '--snakefile',
-                    get_workflow_snake_file_path(self.args.workflow),
-                    '--configfile',
-                    self.args.config_file]
+        snakemake_args = ['--snakefile',
+                          get_workflow_snake_file_path(self.args.workflow),
+                          '--configfile',
+                          self.args.config_file]
 
         # if any conda yaml is provided for a rule, then add '--use-conda' to the snakemake command:
         if any(isinstance(v, dict) and v.get('conda_yaml') for v in (self.config or {}).values()):
-            sys.argv.append('--use-conda')
+            snakemake_args.append('--use-conda')
 
         if self.additional_params:
-            sys.argv.extend(self.additional_params)
+            snakemake_args.extend(self.additional_params)
 
         if self.list_dependencies:
             if max_num_cpus_requested_by_the_workflow:
-                sys.argv.extend(['--dryrun', '--printshellcmds', '--cores', f'{max_num_cpus_requested_by_the_workflow}'])
+                snakemake_args.extend(['--dryrun', '--printshellcmds', '--cores', f'{max_num_cpus_requested_by_the_workflow}'])
             else:
-                sys.argv.extend(['--dryrun', '--printshellcmds'])
-            snakemake.main()
+                snakemake_args.extend(['--dryrun', '--printshellcmds'])
+            snakemake_main(snakemake_args)
             sys.exit(0)
         else:
             if max_num_cpus_requested_by_the_workflow:
-                sys.argv.extend(['-p', '--cores', f'{max_num_cpus_requested_by_the_workflow}'])
+                snakemake_args.extend(['-p', '--cores', f'{max_num_cpus_requested_by_the_workflow}'])
             else:
-                sys.argv.extend(['-p'])
-            snakemake.main()
-
-        # restore the `sys.argv` to the original for the sake of sakity (totally made up word,
-        # but you already know what it means. you're welcome.)
-        sys.argv = original_sys_argv
+                snakemake_args.extend(['-p'])
+            snakemake_main(snakemake_args)
 
 
     def dry_run(self, workflow_graph_output_file_path_prefix='workflow'):

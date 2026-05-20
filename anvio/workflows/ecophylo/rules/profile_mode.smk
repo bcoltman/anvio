@@ -3,7 +3,6 @@
 rule make_metagenomics_config_file:
     """Make a METAGENOMICS WORKFLOW config.json customized for ECOPHYLO_WORKFLOW - PROFILE MODE"""
 
-    version: 1.0
     log: os.path.join(dirs_dict['LOGS_DIR'], "make_metagenomics_config_file.log")
     input:
         rules.make_fasta_txt.output.fasta_txt
@@ -53,7 +52,6 @@ rule make_metagenomics_config_file:
 rule run_metagenomics_workflow:
     """Run metagenomics workflow to profile hmm_hits"""
 
-    version: 1.0
     log: "00_LOGS/run_metagenomics_workflow.log"
     input:
         config = rules.make_metagenomics_config_file.output.config,
@@ -87,7 +85,6 @@ rule run_metagenomics_workflow:
 rule add_default_collection:
     """Make default collection for profile-db that contains all splits"""
 
-    version: 1.0
     log: os.path.join(dirs_dict['LOGS_DIR'], "add_default_collection_{group}.log")
     input: metagenomics_workflow_done = rules.run_metagenomics_workflow.output.done
     params:
@@ -102,7 +99,6 @@ rule add_default_collection:
 rule anvi_summarize:
     """Get coverage values for hmm_hits"""
 
-    version: 1.0
     log: os.path.join(dirs_dict['LOGS_DIR'], "anvi_summarize_{group}.log")
     input:
         done = rules.add_default_collection.output.done
@@ -119,7 +115,6 @@ rule anvi_summarize:
 rule make_anvio_state_file:
     """Make a state file customized for EcoPhylo workflow interactive interface"""
 
-    version: 1.0
     log: os.path.join(dirs_dict['LOGS_DIR'], "make_anvio_state_file_{group}.log")
     input:
         M.get_target_files_make_anvio_state_file()
@@ -303,7 +298,6 @@ rule anvi_import_everything_metagenome:
     If samples.txt is NOT provided then we will make an Ad Hoc profileDB for the tree to import misc data
     """
 
-    version: 1.0
     log: os.path.join(dirs_dict['LOGS_DIR'], "anvi_import_state_{group}.log")
     input:
         tree = rules.rename_tree_tips.output.tree,

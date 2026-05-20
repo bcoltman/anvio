@@ -739,7 +739,7 @@ These may change over time:
 - `scikit-learn>=1.8.0` — clustering, ordination
 - `matplotlib>=3.10.8` — static figure generation
 - `bottle` — lightweight web framework for the interactive interface
-- `snakemake` — workflow engine
+- `snakemake>=9,<10` — workflow engine
 - `pysam` — BAM file reading
 - `pyrodigal_gv` — gene calling (default caller, replaces prodigal)
 - `multiprocess>=0.70.19` — fork of multiprocessing using dill

@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import subprocess
 
 import anvio
 import anvio.fastalib as f
@@ -39,6 +40,11 @@ class Muscle:
         self.web = "http://www.drive5.com/muscle"
 
 
+    def uses_modern_cli(self):
+        version = subprocess.run([self.program_name, '-version'], capture_output=True, text=True)
+        return version.stdout.lower().startswith('muscle 5') or version.stderr.lower().startswith('muscle 5')
+
+
     def run_stdin(self, sequences_list, debug=False, clustalw_format=False):
         """Takes a list of tuples for sequences, performs MSA using muscle, returns a dict.
 
@@ -59,6 +65,12 @@ class Muscle:
             if True, will return alignment in CLUSTALW format (obtained using Muscle's -clw flag) rather than
             a dict of FASTA alignments
         """
+
+        if self.uses_modern_cli():
+            if clustalw_format:
+                raise ConfigError("Drivers::Muscle: MUSCLE 5 does not support the legacy '-clw' output option.")
+
+            return self.run_default(sequences_list, debug=debug)
 
         tmp_dir = filesnpaths.get_temp_directory_path()
         log_file_path = os.path.join(tmp_dir, '00_log.txt')
@@ -134,7 +146,10 @@ class Muscle:
         with open(input_file_path, 'w') as input_file:
             input_file.write(sequences_data)
 
-        cmd_line = [self.program_name, '-in', input_file_path, '-out', output_file_path]
+        if self.uses_modern_cli():
+            cmd_line = [self.program_name, '-align', input_file_path, '-output', output_file_path]
+        else:
+            cmd_line = [self.program_name, '-in', input_file_path, '-out', output_file_path]
 
         additional_params = self.get_additional_params_from_shell()
         if additional_params:

@@ -1422,7 +1422,8 @@ class VariabilitySuper(VariabilityFilter, object):
 
         # the first and second most common items, according to the 2nd convention in the docstring,
         # are now defined for each entry in two pandas Series.
-        items_first_and_second = self.data.loc[entry_ids, self.items].columns[item_index_order[:,:2]]
+        item_labels = ranks.columns.to_numpy()
+        items_first_and_second = item_labels[item_index_order[:,:2]]
 
         # we also calculate the coverage values for the first and second most common items
         sorted_coverage = np.sort(self.data.loc[entry_ids, self.items].values, axis=1)

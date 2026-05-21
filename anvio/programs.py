@@ -257,10 +257,10 @@ class AnvioPrograms(AnvioAuthors):
         program_names_and_paths = {}
 
         try:
-            import tomli as tomllib
+            import tomllib
         except ImportError:
-            raise ConfigError("The AnvioPrograms class needs `tomli` to be available in this Python environment. You can "
-                              "simply install it by running `pip install tomli` (and hope for the best).")
+            raise ConfigError("The AnvioPrograms class needs Python's standard `tomllib` module to be available. "
+                              "This should be present in the required Python 3.12 environment.")
 
         anvio_dir = os.path.dirname(anvio.__file__)
         pyproject_path = os.path.join(os.path.dirname(anvio_dir), 'pyproject.toml')
@@ -469,13 +469,10 @@ class Program:
     def get_program_path(program_name):
         """Locate a program file by name using project entry points."""
         try:
-            import tomllib  # Python 3.11+
+            import tomllib
         except ImportError:
-            try:
-                import tomli as tomllib  # pragma: no cover
-            except ImportError:
-                raise ConfigError("Program cannot be initialized from name because neither `tomllib` nor "
-                                  "`tomli` is available to read pyproject.toml :/")
+            raise ConfigError("Program cannot be initialized from name because Python's standard `tomllib` module "
+                              "is not available in this environment. anvi'o now requires Python 3.12.")
 
         anvio_dir = os.path.dirname(anvio.__file__)
         pyproject_path = os.path.join(os.path.dirname(anvio_dir), 'pyproject.toml')

@@ -202,12 +202,10 @@ class DirectedForce():
         nx.set_edge_attributes(G, {(i, j): {'weight': d} for i, j, d in G.edges(data='weight')})
         nx.set_node_attributes(G, {k: {} for k in G.nodes()})
 
-        edmonds = nx.algorithms.tree.branchings.Edmonds(G, seed=self.seed)
-        M = edmonds.find_optimum(
+        M = nx.algorithms.tree.branchings.maximum_spanning_arborescence(
+            G.copy(),
             attr="weight",
             default=1,
-            kind="max",
-            style="arborescence",
             preserve_attrs=False,
             partition=None,
         )

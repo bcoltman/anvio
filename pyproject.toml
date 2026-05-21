@@ -59,7 +59,7 @@ dependencies = [
     "matplotlib>=3.10",
     "statsmodels",
     "colored",
-    "illumina-utils",
+    "illumina-utils>=2.14",
     "tabulate",
     "rich-argparse",
     "paste",

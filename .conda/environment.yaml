@@ -24,7 +24,6 @@ dependencies:
 - mistune
 - six
 - colored
-- illumina-utils
 - tabulate
 - rich-argparse
 - paste
@@ -51,6 +50,8 @@ dependencies:
 - blast
 - megahit
 - spades
+- flye
+- minimap2
 - bowtie2
 - bwa
 - graphviz
@@ -70,3 +71,5 @@ dependencies:
 - fastani
 - ghostscript
 - nodejs
+- pip:
+  - "illumina-utils>=2.14,<3"

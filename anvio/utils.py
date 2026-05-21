@@ -914,10 +914,12 @@ def store_dict_as_TAB_delimited_file(d, output_path, headers=None, file_obj=None
 
 
 def convert_numpy_array_to_binary_blob(array, compress=True):
+    array = np.ascontiguousarray(array)
+
     if compress:
-        return gzip.compress(memoryview(array), compresslevel=1)
+        return gzip.compress(memoryview(array).cast('B'), compresslevel=1)
     else:
-        return memoryview(array)
+        return memoryview(array).cast('B')
 
 
 def convert_binary_blob_to_numpy_array(blob, dtype, decompress=True):
